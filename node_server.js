@@ -1,12 +1,13 @@
 var express = require('express');
 var app = express();
 var nodemailer = require('nodemailer')
+var schedule = require('node-schedule')
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: "antoniobonessi@gmail.com",
-        pass: "shhhh. it's secret"
+        pass: "it's a secret. shhhhhhhhh"
     },
     tls:{ rejectUnauthorized: false}
 })
@@ -18,12 +19,14 @@ var mailOptions = {
     text: "Does this work?"
 }
 
-transporter.sendMail(mailOptions, function(err, info) {
-    if (err) {
-        console.log(err)
-    } else {
-        console.log("Email Sent: " + info.response)
-    }
+schedule.scheduleJob('0 * * * *', () => {
+    transporter.sendMail(mailOptions, function(err, info) {
+        if (err) {
+            console.log(err)
+        } else {
+            console.log("Email Sent: " + info.response)
+        }
+    })
 })
 
 app.get('/', function (req, res) {
