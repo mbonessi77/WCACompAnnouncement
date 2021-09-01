@@ -6,6 +6,7 @@ var https = require('https')
 
 var compList
 var compByCountry = new Map()
+var storedCompCountryList
 
 var userList = [{
                  user_email: "antoniobonessi@gmail.com",
@@ -19,83 +20,6 @@ var userList = [{
 schedule.scheduleJob('* * * * *', () => {
     fetchCompList()
 })
-
-function storeCurrentCompList(comp_list) {
-    if(compList != null) {
-        compList = compList.filter(function(event) {
-            var startDate = event.start_date
-            var dateArr = startDate.split("-")
-            var year = dateArr[0]
-            var month = dateArr[1]
-            var day = dateArr[2]
-
-            var currentDate = new Date()
-            var currentYear = currentDate.getFullYear()
-            var currentMonth = currentDate.getMonth() + 1 //Default is 0-11
-            var currentDay = currentDate.getDate()
-
-            var isFutureComp = true
-
-            if (year < currentYear) {
-                isFutureComp = false
-            } else if (month < currentMonth && year <= currentYear) {
-                isFutureComp = false
-            } else if (day < currentDay && month <= currentMonth && year <= currentYear) {
-                isFutureComp = false
-            }
-
-            return isFutureComp
-        })
-    }
-
-    if (JSON.stringify(compList) === JSON.stringify(comp_list)) {
-        return
-    }
-
-    compList = comp_list
-
-    sortListIntoMap(compList)
-
-    notifyNewComps()
-}
-
-function sortListIntoMap(list) {
-    list.forEach(element => {
-        if (compByCountry.has(element.country_iso2)) {
-            compByCountry.get(element.country_iso2).push(element)
-        } else {
-            compByCountry.set(element.country_iso2, [])
-            compByCountry.get(element.country_iso2).push(element)
-        }
-    });
-
-    compByCountry.forEach(list => {
-        list = list.filter(function(event) {
-            var startDate = event.start_date
-            var dateArr = startDate.split("-")
-            var year = dateArr[0]
-            var month = dateArr[1]
-            var day = dateArr[2]
-
-            var currentDate = new Date()
-            var currentYear = currentDate.getFullYear()
-            var currentMonth = currentDate.getMonth() + 1 //Default is 0-11
-            var currentDay = currentDate.getDate()
-
-            var isFutureComp = true
-
-            if (year < currentYear) {
-                isFutureComp = false
-            } else if (month < currentMonth && year <= currentYear) {
-                isFutureComp = false
-            } else if (day < currentDay && month <= currentMonth && year <= currentYear) {
-                isFutureComp = false
-            }
-
-            return isFutureComp
-        })
-    })
-}
 
 function fetchCompList() {
     https.get("https://www.worldcubeassociation.org/api/v0/competitions", (resp) => {
@@ -113,6 +37,43 @@ function fetchCompList() {
     })
 }
 
+function storeCurrentCompList(comp_list) {
+    if(compList != null) {
+        compList = compList.filter(function(event) {
+           return isFutureComp(event)
+        })
+    }
+
+    if (JSON.stringify(compList) === JSON.stringify(comp_list)) {
+        return
+    }
+
+    compList = comp_list
+
+    sortListIntoMap(compList)
+
+    notifyNewComps()
+}
+
+function sortListIntoMap(list) {
+    list.forEach(element => {
+        if (compByCountry.has(element.country_iso2)) {
+            if (compByCountry.get(element.country_iso2).filter(e => e.id != element.id)) {
+                compByCountry.get(element.country_iso2).push(element)
+            }
+        } else {
+            compByCountry.set(element.country_iso2, [])
+            compByCountry.get(element.country_iso2).push(element)
+        }
+    });
+
+    compByCountry.forEach(list => {
+        list = list.filter(function(event) {
+            return isFutureComp(event)
+        })
+    })
+}
+
 function notifyNewComps() {
 
     var transporter = nodemailer.createTransport({
@@ -125,7 +86,15 @@ function notifyNewComps() {
     })
 
     for (var i = 0; i < userList.length; i++) {
-        var compsToNotify = compByCountry.get(userList[i].user_country)
+        var isCompStored = false
+
+        var compsToNotify = compByCountry.get(userList[i].user_country).filter(x => { 
+            if (storedCompCountryList != null) {
+                isCompStored = storedCompCountryList.get(x.country_iso2).includes(x)
+            }
+
+            return !isCompStored && isFutureComp(x)
+         })
 
         compsToNotify = compsToNotify.filter(function(comp) {
             return comp.cancelled_at == null
@@ -152,6 +121,33 @@ function notifyNewComps() {
             }
         })
     }
+
+    storedCompCountryList = compByCountry
+}
+
+function isFutureComp(event) {
+    var startDate = event.start_date
+            var dateArr = startDate.split("-")
+            var year = dateArr[0]
+            var month = dateArr[1]
+            var day = dateArr[2]
+
+            var currentDate = new Date()
+            var currentYear = currentDate.getFullYear()
+            var currentMonth = currentDate.getMonth() + 1 //Default is 0-11
+            var currentDay = currentDate.getDate()
+
+            var isFutureComp = true
+
+            if (year < currentYear) {
+                isFutureComp = false
+            } else if (month < currentMonth && year <= currentYear) {
+                isFutureComp = false
+            } else if (day < currentDay && month <= currentMonth && year <= currentYear) {
+                isFutureComp = false
+            }
+
+            return isFutureComp
 }
 
 app.get('/', function (req, res) {
