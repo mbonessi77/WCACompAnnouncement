@@ -4,18 +4,13 @@ var nodemailer = require('nodemailer')
 var schedule = require('node-schedule')
 var https = require('https')
 
+const { MongoClient } = require('mongodb');
+const uri = "";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 var compList
 var compByCountry = new Map()
 var storedCompCountryList
-
-var userList = [{
-                 user_email: "antoniobonessi@gmail.com",
-                 user_country: "US"
-                },
-                {
-                 user_email: "antoniobonessi@yahoo.com",
-                 user_country: "NZ"
-                 }]
 
 schedule.scheduleJob('* * * * *', () => {
     fetchCompList()
@@ -79,50 +74,62 @@ function notifyNewComps() {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: "antoniobonessi@gmail.com",
+            user: "cubecompupdates@gmail.com",
             pass: ""
         },
         tls:{ rejectUnauthorized: false}
     })
 
-    for (var i = 0; i < userList.length; i++) {
-        var isCompStored = false
+    client.connect(err => {
+        const collection = client.db("UsersDB").collection("EmailCollection");
 
-        var compsToNotify = compByCountry.get(userList[i].user_country).filter(x => { 
-            if (storedCompCountryList != null) {
-                isCompStored = storedCompCountryList.get(x.country_iso2).includes(x)
-            }
-
-            return !isCompStored && isFutureComp(x)
-         })
-
-        compsToNotify = compsToNotify.filter(function(comp) {
-            return comp.cancelled_at == null
-        })
-
-        var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
-
-        for (var k = 0; k < compsToNotify.length; k++) {
-            emailText += compsToNotify[k].name + ": " + compsToNotify[k].url + "\n\n"
-        }
-        
-        var mailOptions = {
-            from: 'antoniobonessi@gmail.com',
-            to: userList[i].user_email,
-            subject: "New Competition In Your Country!",
-            text: emailText
-        }
-
-        transporter.sendMail(mailOptions, function(err, info) {
+        collection.find().toArray(function(err, result) {
             if (err) {
-                console.log(err)
-            } else {
-                console.log("Email Sent: " + info.response)
+                throw err
             }
-        })
-    }
 
-    storedCompCountryList = compByCountry
+            for (var i = 0; i < result.length; i++) {
+                var isCompStored = false
+        
+                var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
+                    if (storedCompCountryList != null) {
+                        isCompStored = storedCompCountryList.get(x.country_iso2).includes(x)
+                    }
+        
+                    return !isCompStored && isFutureComp(x)
+                 })
+        
+                compsToNotify = compsToNotify.filter(function(comp) {
+                    return comp.cancelled_at == null
+                })
+        
+                var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
+        
+                for (var k = 0; k < compsToNotify.length; k++) {
+                    emailText += compsToNotify[k].name + ": " + compsToNotify[k].url + "\n\n"
+                }
+                
+                var mailOptions = {
+                    from: 'cubecompupdates@gmail.com',
+                    to: result[i].email,
+                    subject: "New Competition In Your Country!",
+                    text: emailText
+                }
+        
+                transporter.sendMail(mailOptions, function(err, info) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log("Email Sent: " + info.response)
+                    }
+                })
+            }
+        
+            storedCompCountryList = compByCountry
+    
+            client.close();
+        })
+      });
 }
 
 function isFutureComp(event) {
