@@ -1,19 +1,43 @@
 var express = require('express');
 var app = express();
-var nodemailer = require('nodemailer')
-var schedule = require('node-schedule')
+var bodyParser = require('body-parser');
+const { stringify } = require('querystring');
+const { isBuffer } = require('util');
+const { json } = require('body-parser');
+const methodOverride = require('method-override');
+var jsonParser = bodyParser.json()
 var https = require('https')
+var schedule = require('node-schedule')
+var nodemailer = require('nodemailer')
+var urlencodedParser = bodyParser.urlencoded({ extended: true })
+var mongo = require('mongodb');
+app.use(jsonParser)
+app.use(methodOverride('_method'))
 
 const { MongoClient } = require('mongodb');
-const uri = "";
+const uri = "mongodb+srv://CompUpdator:yz4eVz5RULF0vyYo@useremails.t5qbm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 var compList
 var compByCountry = new Map()
 var storedCompCountryList
 
-schedule.scheduleJob('* * * * *', () => {
+schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Eastern Time
     fetchCompList()
+})
+
+app.post('/add_user', urlencodedParser, function(req, res) {
+    var body = {
+        email:req.body.email,
+        country:req.body.country
+    }
+
+    client.connect(err => {
+        var collection = client.db("UsersDB").collection("EmailCollection")
+        collection.insertOne(body)
+
+        res.sendfile(__dirname + "/" + "user_added.html")
+    })
 })
 
 function fetchCompList() {
@@ -75,7 +99,7 @@ function notifyNewComps() {
         service: 'gmail',
         auth: {
             user: "cubecompupdates@gmail.com",
-            pass: ""
+            pass: "yaomuhyukvsvwfsr"
         },
         tls:{ rejectUnauthorized: false}
     })
