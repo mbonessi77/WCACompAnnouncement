@@ -15,14 +15,14 @@ app.use(jsonParser)
 app.use(methodOverride('_method'))
 
 const { MongoClient } = require('mongodb');
-const uri = "mongodb+srv://CompUpdator:yz4eVz5RULF0vyYo@useremails.t5qbm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+const uri = "";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 var compList
 var compByCountry = new Map()
 var storedCompCountryList
 
-schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Eastern Time
+schedule.scheduleJob('* * * * *', () => { //Schedule for midnight Eastern Time
     fetchCompList()
 })
 
@@ -99,7 +99,7 @@ function notifyNewComps() {
         service: 'gmail',
         auth: {
             user: "cubecompupdates@gmail.com",
-            pass: "yaomuhyukvsvwfsr"
+            pass: ""
         },
         tls:{ rejectUnauthorized: false}
     })

@@ -1,7 +1,7 @@
 <html>
 	<body>
-		<form action="/add_user" method="POST">
-			<input type="text" name="email">
+		<form action="/add_user" method="POST" onsubmit="return checkValidEmail()">
+			<input type="text" name="email" id="email_input">
 			<select name="country">
 				<option value="AF">Afghanistan</option>
 				<option value="AX">Aland Islands</option>
@@ -246,5 +246,20 @@
 			</select>
 			<input type="submit" value="Sign up for notifications">
 		</form>
+		
+		<script> 
+			function checkValidEmail() 
+			{
+				 var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+				 var test = regex.test(document.getElementById("email_input").value);
+				 
+				 if (!test)
+				 {
+					alert("Please enter a valid email");
+				 }
+				 
+				 return test;
+			}
+		</script>
 	</body>
 </html>
