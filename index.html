@@ -1,7 +1,15 @@
 <html>
+	<head>
+		<link rel="stylesheet" href="./CSS/index.css"/>
+	</head>
 	<body>
 		<form action="/add_user" method="POST" onsubmit="return checkValidEmail()">
-			<input type="text" name="email" id="email_input">
+			<div class="email-input-section">
+				<input type="text" name="email" id="email_input" class="email-input-area" aria-labelledby="placeholder_email" value="" autocomplete="off">
+				<label class="placeholder-text" for="email_input" id="placeholder_email">
+					<div class="text">Email Address</div>
+				</label>
+			</div>
 			<select name="country">
 				<option value="AF">Afghanistan</option>
 				<option value="AX">Aland Islands</option>
@@ -244,10 +252,18 @@
 				<option value="ZM">Zambia</option>
 				<option value="ZW">Zimbabwe</option>
 			</select>
-			<input type="submit" value="Sign up for notifications">
+			<input type="submit" value="Get Notifications"/>
+		
+			
 		</form>
 		
 		<script> 
+		
+			let input_element = document.getElementById("email_input");
+
+			input_element.addEventListener("keyup", () => {
+				input_element.setAttribute("value", input_element.value);
+			})
 			function checkValidEmail() 
 			{
 				 var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;

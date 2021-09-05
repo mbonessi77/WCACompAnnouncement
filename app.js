@@ -22,7 +22,7 @@ var compList
 var compByCountry = new Map()
 var storedCompCountryList
 
-schedule.scheduleJob('* * * * *', () => { //Schedule for midnight Eastern Time
+schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Eastern Time
     fetchCompList()
 })
 
