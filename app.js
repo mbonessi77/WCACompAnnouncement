@@ -22,6 +22,8 @@ var compList
 var compByCountry = new Map()
 var storedCompCountryList
 
+app.use(express.static(__dirname));
+
 schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Eastern Time
     fetchCompList()
 })

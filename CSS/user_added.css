@@ -1,0 +1,54 @@
+* {
+    font-family: 'Roboto', sans-serif;
+}
+
+.main-header header {
+    width: 100%;
+    padding: 10px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: url('Assets/header background.jpg');
+    height: 20%;
+}
+
+.main-header h1 {
+    color: white;
+}
+
+.main-header p {
+    color: white;
+}
+
+.main-footer footer{
+    background: #000000;
+    padding: 15px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.main-footer footer p {
+    margin: 15px;
+}
+
+.main-footer a {
+    color: white;
+}
+
+h1, p {
+    text-align: center;
+}
+
+hr {
+    margin: 15px;
+}
+
+body {    
+    margin: 0 !important;
+    padding: 0 !important;
+}
