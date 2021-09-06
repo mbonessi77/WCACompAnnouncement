@@ -1,65 +1,113 @@
-.email-input-section {
-    position: relative;
+* {
+    font-family: 'Roboto', sans-serif;
 }
 
-.email-input-section input {
-    height: 5rem;
-    width: 20rem;
-    border: 2px solid black;
-    border-radius: 1rem;
+.main-header header {
+    width: 100%;
+    padding: 10px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: url('Assets/header background.jpg');
+    height: 20%;
 }
 
-.placeholder-text{
-    position: absolute;
-    top: 0;
+.main-header h1 {
+    color: white;
+}
+
+.main-header p {
+    color: white;
+}
+
+.main-content {
+    display: flex;
+}
+
+.left-column {
+    width: 33%;
+    padding: 10px;
+}
+
+.right-column {
+    width: 67%;
+    padding: 10px
+}
+
+.contact-container {
+    background: lightgray;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+.donation-container {
+    background: lightgray;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.main-footer footer{
+    background: #000000;
+    padding: 15px;
+    position: fixed;
     bottom: 0;
     left: 0;
-    right: 0;
-    border: 3px solid transparent;
-    background-color: transparent;
+    width: 100%;
     display: flex;
-    align-items: center;
+    justify-content: center;
 }
 
-.text{
-    font-size: 1.4rem;
-    padding: 0 0.5rem;
-    background-color: transparent;
-    color: black;
+.main-footer footer p {
+    margin: 15px;
 }
 
-input, .placeholder-text{
-    font-size: 1.4rem;
-    padding: 0 1.2rem;
+.main-footer a {
+    color: white;
 }
 
-input:focus{
-    outline: none;
-    border-color: blueviolet;
+select {
+    height: 40px;
 }
 
-input:focus + .placeholder-text .text{
-    background-color: white;
-    font-size: 1.1rem;
-    color: black;
-    transform: translate(0, -170%);
-    border-color: blueviolet;
-    color: blueviolet;
+input[type=submit] {
+    background:#0084ff;
+    text-align: center;
+    font-family: 'Roboto';
+    font-weight: bold;
+    font-size: 1em;
+    border-radius: 6px;
+    border: none;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: white;
 }
 
-.text {
-    transform: translate(0);
-    transition: transform 0.15s ease-out, font-size 0.15s ease-out, background-color 0.2s ease-out, color 0.15s ease-out;
+input[type=text] {
+    height: 40px;
+    width: 20%;
 }
 
-input:focus + .placeholder-text .text, :not(input[value=""]) + .placeholder-text .text{
-    background-color: white;
-    font-size: 1.1rem;
-    color: black;
-    transform: translate(0, -170%);
+button {
+    background:#0084ff;
+    text-align: center;
+    font-family: 'Roboto';
+    font-weight: bold;
+    font-size: 1em;
+    border-radius: 6px;
+    border: none;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: white;
 }
 
-input:focus + .placeholder-text .text{
-    border-color: blueviolet;
-    color: blueviolet;
+body {    
+    margin: 0 !important;
+    padding: 0 !important;
 }
