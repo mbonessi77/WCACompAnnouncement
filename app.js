@@ -116,39 +116,43 @@ function notifyNewComps() {
 
             for (var i = 0; i < result.length; i++) {
                 var isCompStored = false
+
+                var temp = result[i].country;
         
-                var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
-                    if (storedCompCountryList != null) {
-                        isCompStored = storedCompCountryList.get(x.country_iso2).includes(x)
+                if(compByCountry.get(result[i].country) != null) {
+                    var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
+                        if (storedCompCountryList != null) {
+                            isCompStored = storedCompCountryList.get(x.country_iso2).includes(x)
+                        }
+            
+                        return !isCompStored && isFutureComp(x)
+                    })
+            
+                    compsToNotify = compsToNotify.filter(function(comp) {
+                        return comp.cancelled_at == null
+                    })
+            
+                    var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
+            
+                    for (var k = 0; k < compsToNotify.length; k++) {
+                        emailText += compsToNotify[k].name + ": " + compsToNotify[k].url + "\n\n"
                     }
-        
-                    return !isCompStored && isFutureComp(x)
-                 })
-        
-                compsToNotify = compsToNotify.filter(function(comp) {
-                    return comp.cancelled_at == null
-                })
-        
-                var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
-        
-                for (var k = 0; k < compsToNotify.length; k++) {
-                    emailText += compsToNotify[k].name + ": " + compsToNotify[k].url + "\n\n"
-                }
-                
-                var mailOptions = {
-                    from: 'cubecompupdates@gmail.com',
-                    to: result[i].email,
-                    subject: "New Competition In Your Country!",
-                    text: emailText
-                }
-        
-                transporter.sendMail(mailOptions, function(err, info) {
-                    if (err) {
-                        console.log(err)
-                    } else {
-                        console.log("Email Sent: " + info.response)
+                    
+                    var mailOptions = {
+                        from: 'cubecompupdates@gmail.com',
+                        to: result[i].email,
+                        subject: "New Competition In Your Country!",
+                        text: emailText
                     }
-                })
+            
+                    transporter.sendMail(mailOptions, function(err, info) {
+                        if (err) {
+                            console.log(err)
+                        } else {
+                            console.log("Email Sent: " + info.response)
+                        }
+                    })
+                }
             }
         
             storedCompCountryList = compByCountry
