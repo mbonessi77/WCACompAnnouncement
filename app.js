@@ -10,7 +10,6 @@ var https = require('https')
 var schedule = require('node-schedule')
 var nodemailer = require('nodemailer')
 var urlencodedParser = bodyParser.urlencoded({ extended: true })
-var mongo = require('mongodb');
 app.use(jsonParser)
 app.use(methodOverride('_method'))
 
@@ -24,7 +23,7 @@ var storedCompCountryList
 
 app.use(express.static(__dirname));
 
-schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Eastern Time
+schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Server Time (8pm Eastern Time)
     fetchCompList()
 })
 
@@ -38,7 +37,7 @@ app.post('/add_user', urlencodedParser, function(req, res) {
         var collection = client.db("UsersDB").collection("EmailCollection")
         collection.insertOne(body)
 
-        res.sendfile(__dirname + "/" + "user_added.html")
+        res.sendFile(__dirname + "/" + "user_added.html")
     })
 })
 
@@ -116,8 +115,6 @@ function notifyNewComps() {
 
             for (var i = 0; i < result.length; i++) {
                 var isCompStored = false
-
-                var temp = result[i].country;
         
                 if(compByCountry.get(result[i].country) != null) {
                     var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
@@ -131,6 +128,10 @@ function notifyNewComps() {
                     compsToNotify = compsToNotify.filter(function(comp) {
                         return comp.cancelled_at == null
                     })
+
+                    if (compsToNotify.length == 0) {
+                        break;
+                    }
             
                     var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
             
