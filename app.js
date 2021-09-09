@@ -11,7 +11,7 @@ var schedule = require('node-schedule')
 var nodemailer = require('nodemailer')
 var urlencodedParser = bodyParser.urlencoded({ extended: true })
 app.use(jsonParser)
-app.use(methodOverride('_method'))
+app.use(methodOverride('X-HTTP-Method-Override'))
 
 const { MongoClient } = require('mongodb');
 const uri = "";
@@ -38,6 +38,24 @@ app.post('/add_user', urlencodedParser, function(req, res) {
         collection.insertOne(body)
 
         res.sendFile(__dirname + "/" + "user_added.html")
+    })
+})
+
+app.post('/remove_user', urlencodedParser, function(req, res) {
+    client.connect(err => {
+        var collection = client.db("UsersDB").collection("EmailCollection")
+        var query = {
+            email: req.body.email
+        }
+
+        collection.deleteMany(query, function(err, collect) {
+            if (err) {
+                throw err
+            }
+
+            res.sendFile(__dirname + "/user_removed.html")
+            client.close()
+        })
     })
 })
 

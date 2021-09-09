@@ -37,9 +37,8 @@
 				<div class="form-container">
 					<h3>Sign up for email notifications</h3>
 					<hr>
-					<form action="/add_user" method="POST" onsubmit="return checkValidEmail()">
-						<input type="text" name="email" id="email_input" class="email-input-area" aria-labelledby="placeholder_email" value="" autocomplete="off"
-						placeholder="Email Address">
+					<form action="/add_user" method="POST" onsubmit="return validateEmail(this.email_input.value)">
+						<input type="text" name="email" id="email_input" class="email-input-area" placeholder="Email Address">
 						<select name="country">
 							<option value="AF">Afghanistan</option>
 							<option value="AX">Aland Islands</option>
@@ -285,6 +284,17 @@
 						<input type="submit" value="Get Notifications"/>
 					</form>
 				</div>
+
+				<div class="form-delete-container">
+					<h3>Unsubscribe from mailing list</h3>
+					<hr>
+					<p>Enter your email below if you wish to unsubscribe to these alerts. You can sign up for notifications again using the form above.</p>
+
+					<form action="/remove_user?_method=DELETE" method="POST" onsubmit="return validateEmail(this.remove_email_input.value)">
+						<input type="text" name='email' id="remove_email_input" class="email-input-area" placeholder="Email Address"/>
+						<input type="submit" value="Unsubscribe"/>				
+					</form>
+				</div>
 			</div>
 		</div>
 
@@ -297,17 +307,16 @@
 		</div>
 		
 		<script>
-			function checkValidEmail() 
-			{
-				 var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-				 var test = regex.test(document.getElementById("email_input").value);
-				 
-				 if (!test)
-				 {
+			var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+			function validateEmail(textInput) {
+				var test = regex.test(textInput);
+
+				if(!test) {
 					alert("Please enter a valid email");
-				 }
-				 
-				 return test;
+				}
+
+				return test;
 			}
 		</script>
 	</body>
