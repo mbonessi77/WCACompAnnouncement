@@ -1,3 +1,5 @@
 # WCA Comp Announcement Notifications
 
-This is going to be an open source project that allows you to receive email alerts when competitions are announced in your country! A simple web application running on NodeJS and Google Cloud
+Web application that consists of a client and a server. A user will enter their email address and select the country they want to be notified for when new competitions are available. 
+
+Server is written in NodeJS and uses express, MongoDB, and runs on Google Cloud.
