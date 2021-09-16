@@ -14,12 +14,12 @@ app.use(jsonParser)
 app.use(methodOverride('X-HTTP-Method-Override'))
 
 const { MongoClient } = require('mongodb');
-const uri = "";
+const uri = "mongodb+srv://CompUpdator:pDm9iRZvh823d6z8@useremails.t5qbm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 var compList
 var compByCountry = new Map()
-var storedCompCountryList
+var storedCompCountryList = new Map()
 
 app.use(express.static(__dirname));
 
@@ -43,6 +43,10 @@ app.post('/add_user', urlencodedParser, function(req, res) {
 
 app.post('/remove_user', urlencodedParser, function(req, res) {
     client.connect(err => {
+        if(err) {
+            throw err
+        }
+
         var collection = client.db("UsersDB").collection("EmailCollection")
         var query = {
             email: req.body.email
@@ -80,10 +84,15 @@ function storeCurrentCompList(comp_list) {
         compList = compList.filter(function(event) {
            return isFutureComp(event)
         })
-    }
 
-    if (JSON.stringify(compList) === JSON.stringify(comp_list)) {
-        return
+        let result = compList.length == comp_list.length &&
+            compList.every(function(element) {
+                return comp_list.includes(element)
+            })
+
+        if (result) {
+            return
+        }
     }
 
     compList = comp_list
@@ -96,9 +105,17 @@ function storeCurrentCompList(comp_list) {
 function sortListIntoMap(list) {
     list.forEach(element => {
         if (compByCountry.has(element.country_iso2)) {
-            if (compByCountry.get(element.country_iso2).filter(e => e.id != element.id)) {
+            var shouldNotAdd = false
+            compByCountry.get(element.country_iso2).filter((comp, index, self) => {
+                index === self.findIndex((e) => {
+                    shouldNotAdd = e.id === element.id
+                    return shouldNotAdd
+                })
+            })
+            if(!shouldNotAdd) {
                 compByCountry.get(element.country_iso2).push(element)
             }
+            
         } else {
             compByCountry.set(element.country_iso2, [])
             compByCountry.get(element.country_iso2).push(element)
@@ -118,7 +135,7 @@ function notifyNewComps() {
         service: 'gmail',
         auth: {
             user: "cubecompupdates@gmail.com",
-            pass: ""
+            pass: "hizofnotojbldcue"
         },
         tls:{ rejectUnauthorized: false}
     })
@@ -131,16 +148,17 @@ function notifyNewComps() {
                 throw err
             }
 
-            for (var i = 0; i < result.length; i++) {
-                var isCompStored = false
-        
+            for (var i = 0; i < result.length; i++) {        
                 if(compByCountry.get(result[i].country) != null) {
                     var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
+                        var isCompStored = false
                         if (storedCompCountryList != null) {
-                            isCompStored = storedCompCountryList.get(x.country_iso2).includes(x)
+                            if(storedCompCountryList.has(x.country_iso2)) {
+                                isCompStored = storedCompCountryList.get(x.country_iso2).some(event => event.id === x.id)
+                            }
                         }
             
-                        return !isCompStored && isFutureComp(x)
+                       return !isCompStored && isFutureComp(x)
                     })
             
                     compsToNotify = compsToNotify.filter(function(comp) {
@@ -173,10 +191,12 @@ function notifyNewComps() {
                     })
                 }
             }
-        
-            storedCompCountryList = compByCountry
-    
-            client.close();
+
+            for (const [key, value] of compByCountry.entries()) {
+                storedCompCountryList.set(key, value)
+            }
+
+            compByCountry.clear()
         })
       });
 }
