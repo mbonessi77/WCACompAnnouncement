@@ -14,7 +14,7 @@ app.use(jsonParser)
 app.use(methodOverride('X-HTTP-Method-Override'))
 
 const { MongoClient } = require('mongodb');
-const uri = "mongodb+srv://CompUpdator:pDm9iRZvh823d6z8@useremails.t5qbm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+const uri = "";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 var compList
@@ -135,7 +135,7 @@ function notifyNewComps() {
         service: 'gmail',
         auth: {
             user: "cubecompupdates@gmail.com",
-            pass: "hizofnotojbldcue"
+            pass: ""
         },
         tls:{ rejectUnauthorized: false}
     })
