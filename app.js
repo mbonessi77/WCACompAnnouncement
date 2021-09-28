@@ -21,7 +21,7 @@ var compList
 var compByCountry = new Map()
 var storedCompCountryList = new Map()
 
-app.use(express.static(__dirname));
+app.use(express.static(__dirname))
 
 schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Server Time (8pm Eastern Time)
     fetchCompList()
@@ -81,21 +81,25 @@ function fetchCompList() {
 
 function storeCurrentCompList(comp_list) {
     if(compList != null) {
-        compList = compList.filter(function(event) {
-           return isFutureComp(event)
-        })
-
         let result = compList.length == comp_list.length &&
-            compList.every(function(element) {
-                return comp_list.includes(element)
+            comp_list.every(function(element) {
+                return compList.includes(element)
             })
 
         if (result) {
             return
         }
+
+        compList = compList.filter(function(event) {
+           return isFutureComp(event)
+        })
     }
 
-    compList = comp_list
+    compList = []
+
+    for(var i = 0; i < comp_list.length; i++) {
+        compList.push(comp_list[i])
+    }
 
     sortListIntoMap(compList)
 
@@ -166,7 +170,7 @@ function notifyNewComps() {
                     })
 
                     if (compsToNotify.length == 0) {
-                        break;
+                        continue
                     }
             
                     var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
@@ -193,6 +197,9 @@ function notifyNewComps() {
             }
 
             for (const [key, value] of compByCountry.entries()) {
+                value.filter(function(event) {
+                    return isFutureComp(event)
+                })
                 storedCompCountryList.set(key, value)
             }
 
