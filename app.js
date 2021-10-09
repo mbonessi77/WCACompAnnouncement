@@ -29,7 +29,7 @@ schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Server Time (8
 
 app.post('/add_user', urlencodedParser, function(req, res) {
 
-    var regex = new RegExp('/^.+@.+\..+$/')
+    var regex = new RegExp('^.+@.+\..+$')
 
     if(regex.test(req.body.email)) {
         var body = {
@@ -39,6 +39,7 @@ app.post('/add_user', urlencodedParser, function(req, res) {
     
         client.connect(err => {
             var collection = client.db("UsersDB").collection("EmailCollection")
+            // var qaCollection = client.db("UsersDB").collection("QACollection")
             collection.insertOne(body)
     
             res.sendFile(__dirname + "/" + "user_added.html")
@@ -53,18 +54,32 @@ app.post('/remove_user', urlencodedParser, function(req, res) {
         }
 
         var collection = client.db("UsersDB").collection("EmailCollection")
+        // var qaCollection = client.db("UsersDB").collection("QACollection")
+
         var query = {
             email: req.body.email
         }
 
-        collection.deleteMany(query, function(err, collect) {
-            if (err) {
-                throw err
-            }
+        if(req.body.country == "all") {
+            collection.deleteMany(query, function(err, collect) {
+                if(err) {
+                    throw err
+                }
 
-            res.sendFile(__dirname + "/user_removed.html")
-            client.close()
-        })
+                res.sendFile(__dirname + "/user_removed.html")
+                client.close()
+            })
+        } else {
+            query.country = req.body.country
+            qaCollection.deleteOne(query, function(err, collect) {
+                if (err) {
+                    throw err
+                }
+    
+                res.sendFile(__dirname + "/user_removed.html")
+                client.close()
+            })
+        }
     })
 })
 
@@ -151,6 +166,7 @@ function notifyNewComps() {
 
     client.connect(err => {
         const collection = client.db("UsersDB").collection("EmailCollection");
+        // const qaCollection = client.db("UsersDB").collection("QACollection")
 
         collection.find().toArray(function(err, result) {
             if (err) {
