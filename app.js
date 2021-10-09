@@ -28,17 +28,22 @@ schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Server Time (8
 })
 
 app.post('/add_user', urlencodedParser, function(req, res) {
-    var body = {
-        email:req.body.email,
-        country:req.body.country
+
+    var regex = new RegExp('/^.+@.+\..+$/')
+
+    if(regex.test(req.body.email)) {
+        var body = {
+            email:req.body.email,
+            country:req.body.country
+        }
+    
+        client.connect(err => {
+            var collection = client.db("UsersDB").collection("EmailCollection")
+            collection.insertOne(body)
+    
+            res.sendFile(__dirname + "/" + "user_added.html")
+        })
     }
-
-    client.connect(err => {
-        var collection = client.db("UsersDB").collection("EmailCollection")
-        collection.insertOne(body)
-
-        res.sendFile(__dirname + "/" + "user_added.html")
-    })
 })
 
 app.post('/remove_user', urlencodedParser, function(req, res) {

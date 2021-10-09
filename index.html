@@ -2,6 +2,9 @@
 	<head>
 		<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="./CSS/index.css"/>
+		<meta name="description" content="Get notifications for Rubik's Cube competitions">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>WCA Comp Announcement</title>
 	</head>
 	<body>
 		
@@ -307,7 +310,7 @@
 		</div>
 		
 		<script>
-			var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+			var regex = /^.+@.+\..+$/;
 
 			function validateEmail(textInput) {
 				var test = regex.test(textInput);
