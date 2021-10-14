@@ -40,7 +40,7 @@
 				<div class="form-container">
 					<h3>Sign up for email notifications</h3>
 					<hr>
-					<form action="/add_user" method="POST" onsubmit="return validateEmail(this.email_input.value)">
+					<form action="/add_user" method="POST" onsubmit="return validateEmail(this.email_input.value.trim())">
 						<input type="text" name="email" id="email_input" class="email-input-area" placeholder="Email Address">
 						<select name="country">
 							<option value="AF">Afghanistan</option>
@@ -293,7 +293,7 @@
 					<hr>
 					<p>Enter your email below if you wish to unsubscribe from these alerts. You can sign up for notifications again using the form above.</p>
 
-					<form action="/remove_user?_method=DELETE" method="POST" onsubmit="return validateEmail(this.remove_email_input.value)">
+					<form action="/remove_user?_method=DELETE" method="POST" onsubmit="return validateEmail(this.remove_email_input.value.trim())">
 						<input type="text" name='email' id="remove_email_input" class="email-input-area" placeholder="Email Address"/>
 						<select name="country">
 							<option value="all">All Countries</option>
