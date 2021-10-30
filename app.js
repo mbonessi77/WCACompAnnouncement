@@ -1,10 +1,12 @@
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-const { stringify } = require('querystring');
-const { isBuffer } = require('util');
-const { json } = require('body-parser');
-const methodOverride = require('method-override');
+var express = require('express')
+var app = express()
+var bodyParser = require('body-parser')
+const methodOverride = require('method-override')
+const ObjectsToCsv = require('objects-to-csv')
+const toJson = require('csvtojson')
+const fs = require('fs')
+const { promisify } = require('util')
+const sleep = promisify(setTimeout)
 var jsonParser = bodyParser.json()
 var https = require('https')
 var schedule = require('node-schedule')
@@ -13,18 +15,18 @@ var urlencodedParser = bodyParser.urlencoded({ extended: true })
 app.use(jsonParser)
 app.use(methodOverride('X-HTTP-Method-Override'))
 
-const { MongoClient } = require('mongodb');
-const uri = "";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const { MongoClient } = require('mongodb')
+const uri = ""
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 
 var compList
 var compByCountry = new Map()
-var storedCompCountryList = new Map()
+var tempList = []
 
 app.use(express.static(__dirname))
 
 schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Server Time (8pm Eastern Time)
-    fetchCompList()
+    fetchCompList(1)
 })
 
 app.post('/add_user', urlencodedParser, function(req, res) {
@@ -39,7 +41,7 @@ app.post('/add_user', urlencodedParser, function(req, res) {
     
         client.connect(err => {
             var collection = client.db("UsersDB").collection("EmailCollection")
-            // var qaCollection = client.db("UsersDB").collection("QACollection")
+            // var collection = client.db("UsersDB").collection("QACollection")
             collection.insertOne(body)
     
             res.sendFile(__dirname + "/" + "user_added.html")
@@ -54,7 +56,7 @@ app.post('/remove_user', urlencodedParser, function(req, res) {
         }
 
         var collection = client.db("UsersDB").collection("EmailCollection")
-        // var qaCollection = client.db("UsersDB").collection("QACollection")
+        // var collection = client.db("UsersDB").collection("QACollection")
 
         var query = {
             email: req.body.email
@@ -83,8 +85,8 @@ app.post('/remove_user', urlencodedParser, function(req, res) {
     })
 })
 
-function fetchCompList() {
-    https.get("https://www.worldcubeassociation.org/api/v0/competitions", (resp) => {
+function fetchCompList(pageNum) {
+    https.get("https://www.worldcubeassociation.org/api/v0/competitions?page=" + pageNum, (resp) => {
         let data = ''
 
         resp.on('data', (chunk => {
@@ -92,7 +94,17 @@ function fetchCompList() {
         }))
 
         resp.on('end', () => {
-            storeCurrentCompList(JSON.parse(data))
+            var list = JSON.parse(data)
+            
+            for (var i = 0; i < list.length; i++) {
+                tempList.push(list[i])
+            }
+
+            if(pageNum < 4) {
+                fetchCompList(pageNum + 1)
+            } else {
+                storeCurrentCompList(tempList)
+            }
         })
     }).on('error', (err) => {
         console.log("Error: " + err.message)
@@ -144,7 +156,7 @@ function sortListIntoMap(list) {
             compByCountry.set(element.country_iso2, [])
             compByCountry.get(element.country_iso2).push(element)
         }
-    });
+    })
 
     compByCountry.forEach(list => {
         list = list.filter(function(event) {
@@ -158,29 +170,30 @@ function notifyNewComps() {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: "cubecompupdates@gmail.com",
+            user: "cubecompupdates@cubecompupdates.net",
             pass: ""
         },
-        tls:{ rejectUnauthorized: false}
+        tls:{ rejectUnauthorized: false},
+        pool: true
     })
 
     client.connect(err => {
-        const collection = client.db("UsersDB").collection("EmailCollection");
-        // const qaCollection = client.db("UsersDB").collection("QACollection")
+        const collection = client.db("UsersDB").collection("EmailCollection")
+        // const collection = client.db("UsersDB").collection("QACollection")
 
-        collection.find().toArray(function(err, result) {
+        collection.find().toArray(async function(err, result) {
             if (err) {
                 throw err
             }
 
-            for (var i = 0; i < result.length; i++) {        
+            for (var i = 0; i < result.length; i++) {   
+                sleep(1000)     
                 if(compByCountry.get(result[i].country) != null) {
+                    var storedList = await readCountryCsv(result[i].country)
                     var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
                         var isCompStored = false
-                        if (storedCompCountryList != null) {
-                            if(storedCompCountryList.has(x.country_iso2)) {
-                                isCompStored = storedCompCountryList.get(x.country_iso2).some(event => event.id === x.id)
-                            }
+                        if (storedList != null) {
+                            isCompStored = storedList.some(event => event.id === x.id)
                         }
             
                        return !isCompStored && isFutureComp(x)
@@ -201,7 +214,7 @@ function notifyNewComps() {
                     }
                     
                     var mailOptions = {
-                        from: 'cubecompupdates@gmail.com',
+                        from: 'Comp Announcer',
                         to: result[i].email,
                         subject: "New Competition In Your Country!",
                         text: emailText
@@ -221,12 +234,10 @@ function notifyNewComps() {
                 value.filter(function(event) {
                     return isFutureComp(event)
                 })
-                storedCompCountryList.set(key, value)
+                writeCountryCsv(key, value)
             }
-
-            compByCountry.clear()
         })
-      });
+      })
 }
 
 function isFutureComp(event) {
@@ -254,8 +265,27 @@ function isFutureComp(event) {
             return isFutureComp
 }
 
+function writeCountryCsv(countryName, compsInCountry) {
+    let csv = new ObjectsToCsv(compsInCountry)
+    csv.toDisk('./' + countryName + '.csv')
+}
+
+async function readCountryCsv(countryName) {
+    let path = './' + countryName + '.csv'
+    var result
+
+    if(fs.existsSync(path)) {
+        await toJson().fromFile(path)
+                .then(function(list) {
+                    result = list
+                })
+    }
+
+    return result
+}
+
 app.get('/', function (req, res) {
-    res.sendFile( __dirname + "/" + "index.html" );
+    res.sendFile( __dirname + "/" + "index.html" )
  })
 
 var server = app.listen(8080, function () {
