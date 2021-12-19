@@ -1,5 +1,3 @@
-var express = require('express')
-var app = express()
 var bodyParser = require('body-parser')
 const methodOverride = require('method-override')
 const ObjectsToCsv = require('objects-to-csv')
@@ -7,11 +5,16 @@ const toJson = require('csvtojson')
 const fs = require('fs')
 const { promisify } = require('util')
 const sleep = promisify(setTimeout)
+const {Storage} = require('@google-cloud/storage')
+const storage = new Storage()
+const bucket = storage.bucket('comp_list_bucket')
 var jsonParser = bodyParser.json()
 var https = require('https')
 var schedule = require('node-schedule')
 var nodemailer = require('nodemailer')
 var urlencodedParser = bodyParser.urlencoded({ extended: true })
+var express = require('express')
+var app = express()
 app.use(jsonParser)
 app.use(methodOverride('X-HTTP-Method-Override'))
 
@@ -25,9 +28,13 @@ var tempList = []
 
 app.use(express.static(__dirname))
 
-schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight Server Time (8pm Eastern Time)
+schedule.scheduleJob('0 0 * * *', () => { //Schedule for midnight UTC
     fetchCompList(1)
 })
+
+app.get('/', function (req, res) {
+    res.sendFile( __dirname + "/" + "index.html")
+ })
 
 app.post('/add_user', urlencodedParser, function(req, res) {
 
@@ -181,63 +188,59 @@ function notifyNewComps() {
         const collection = client.db("UsersDB").collection("EmailCollection")
         // const collection = client.db("UsersDB").collection("QACollection")
 
-        collection.find().toArray(async function(err, result) {
-            if (err) {
-                throw err
-            }
-
-            for (var i = 0; i < result.length; i++) {   
-                sleep(1000)     
-                if(compByCountry.get(result[i].country) != null) {
-                    var storedList = await readCountryCsv(result[i].country)
-                    var compsToNotify = compByCountry.get(result[i].country).filter(x => { 
-                        var isCompStored = false
-                        if (storedList != null) {
-                            isCompStored = storedList.some(event => event.id === x.id)
-                        }
-            
-                       return !isCompStored && isFutureComp(x)
-                    })
-            
-                    compsToNotify = compsToNotify.filter(function(comp) {
-                        return comp.cancelled_at == null
-                    })
-
-                    if (compsToNotify.length == 0) {
-                        continue
+        for (const [key, value] of compByCountry) {
+            readCountryCsv(key).catch(console.error).then(storedList => {
+                var compsToNotify = value.filter(x => {
+                    var isCompStored = false
+                    if (storedList != null) {
+                        isCompStored = storedList.some(event => event.id === x.id)
                     }
-            
+    
+                    return !isCompStored && isFutureComp(x)
+                })
+    
+                compsToNotify = compsToNotify.filter(function (comp) {
+                    return comp.cancelled_at == null
+                })
+    
+                if (compsToNotify.length == 0) {
+                    return
+                }
+    
+                collection.find({ country: key }).toArray(async function (err, result) {
+                    if (err) {
+                        throw err
+                    }
+    
                     var emailText = "A new WCA competition was just announced for your country. Details for the competition(s) are below.\n\n"
-            
+    
                     for (var k = 0; k < compsToNotify.length; k++) {
                         emailText += compsToNotify[k].name + ": " + compsToNotify[k].url + "\n\n"
                     }
-                    
-                    var mailOptions = {
-                        from: 'Comp Announcer',
-                        to: result[i].email,
-                        subject: "New Competition In Your Country!",
-                        text: emailText
-                    }
-            
-                    transporter.sendMail(mailOptions, function(err, info) {
-                        if (err) {
-                            console.log(err)
-                        } else {
-                            console.log("Email Sent: " + info.response)
+    
+                    for (var i = 0; i < result.length; i++) {
+                        sleep(1000)
+                        var mailOptions = {
+                            from: 'Comp Announcer',
+                            to: result[i].email,
+                            subject: "New Competition In Your Country!",
+                            text: emailText
                         }
-                    })
-                }
-            }
-
-            for (const [key, value] of compByCountry.entries()) {
-                value.filter(function(event) {
-                    return isFutureComp(event)
+    
+                        transporter.sendMail(mailOptions, function (err, info) {
+                            if (err) {
+                                console.log(err)
+                            } else {
+                                console.log("Email Sent: " + info.response)
+                            }
+                        })
+                    }
+    
+                    await writeCountryCsv(key, value).catch(console.error)
                 })
-                writeCountryCsv(key, value)
-            }
-        })
-      })
+            })
+        }
+    })
 }
 
 function isFutureComp(event) {
@@ -265,28 +268,36 @@ function isFutureComp(event) {
             return isFutureComp
 }
 
-function writeCountryCsv(countryName, compsInCountry) {
+async function writeCountryCsv(countryName, compsInCountry) {
     let csv = new ObjectsToCsv(compsInCountry)
-    csv.toDisk('./' + countryName + '.csv')
+    let path = './' + countryName + '.csv'
+    await csv.toDisk(path).catch(console.error)
+
+    await bucket.upload(path, {destination: countryName + '.csv'}).catch(console.error)
+
+    console.log("Upload complete")
 }
 
 async function readCountryCsv(countryName) {
-    let path = './' + countryName + '.csv'
+    let fileName = countryName + '.csv'
+    let path = './' + fileName
     var result
 
-    if(fs.existsSync(path)) {
-        await toJson().fromFile(path)
-                .then(function(list) {
-                    result = list
-                })
+    const options = {
+        destination: path
+    }
+
+    await bucket.file(fileName).download(options).catch(console.error)
+
+    if (fs.existsSync(path)) {
+        await toJson()
+        .fromFile(path).then(function(list) {
+            result = list
+        })
     }
 
     return result
 }
-
-app.get('/', function (req, res) {
-    res.sendFile( __dirname + "/" + "index.html" )
- })
 
 var server = app.listen(8080, function () {
     var host = server.address().address
