@@ -1,13 +1,14 @@
-<html>
+<html lang="en">
 	<head>
 		<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="./CSS/index.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 		<meta name="description" content="Get notifications for Rubik's Cube competitions">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>WCA Comp Announcement</title>
 	</head>
 	<body>
-		
+
 		<div class="main-header">
 			<header>
 				<h1>Cube Comp Updates</h1>
@@ -18,17 +19,17 @@
 		<div class="main-content">
 			<div class="left-column">
 				<div class="contact-container">
-					<h3>Contact</h3>
-					<p>Any questions, comments, or bugs you've noticed? Feel free to contact me at <a href="mailto:cubecompupdates@gmail.com">CubeCompUpdates@gmail.com</a></p>
+					<h4>Contact</h4>
+					<p>Any questions, comments, or bugs you've noticed? Feel free to contact me at <a class="email-link" href="mailto:cubecompupdates@gmail.com">CubeCompUpdates@gmail.com</a></p>
 				</div>
-				
+
 				<div class="donation-container">
-					<h3>Donate</h3>
+					<h4>Donate</h4>
 					<p>This service is and always will be free to use. But donations are always helpful and appreciated!</p>
 					<button onclick="location.href='https://paypal.me/AntonioBonessi?locale.x=en_US'">Donate</button>
 				</div>
 			</div>
-	
+
 			<div class="right-column">
 				<div class="info-container">
 					<h3>Stay ahead of the rest!</h3>
@@ -36,13 +37,16 @@
 					<p>It can be easy to miss a competition by not checking the WCA site regularly. So this service is here to help! When you sign up you will be notified when a new competition is available on the
 					WCA site in the country you've specified. </p>
 				</div>
-				
+
 				<div class="form-container">
 					<h3>Sign up for email notifications</h3>
 					<hr>
-					<form action="/add_user" method="POST" onsubmit="return validateEmail(this.email_input.value.trim())">
-						<input type="text" name="email" id="email_input" class="email-input-area" placeholder="Email Address">
-						<select name="country">
+					<form class="form-group" action="/add_user" method="POST" onsubmit="return validateEmail(this.email_input.value.trim())">
+						<label for="email_input"></label>
+						<input type="text" name="email" id="email_input" class="email-input-area form-control" placeholder="Email Address">
+
+                        <label for="subscribe_country"></label>
+						<select class="form-control" id="subscribe_country" name="country">
 							<option value="AF">Afghanistan</option>
 							<option value="AX">Aland Islands</option>
 							<option value="AL">Albania</option>
@@ -284,7 +288,7 @@
 							<option value="ZM">Zambia</option>
 							<option value="ZW">Zimbabwe</option>
 						</select>
-						<input type="submit" value="Get Notifications"/>
+						<input class="btn btn-primary form-control mt-2" type="submit" value="Get Notifications"/>
 					</form>
 				</div>
 
@@ -293,9 +297,12 @@
 					<hr>
 					<p>Enter your email below if you wish to unsubscribe from these alerts. You can sign up for notifications again using the form above.</p>
 
-					<form action="/remove_user?_method=DELETE" method="POST" onsubmit="return validateEmail(this.remove_email_input.value.trim())">
-						<input type="text" name='email' id="remove_email_input" class="email-input-area" placeholder="Email Address"/>
-						<select name="country">
+					<form class="form-group" action="/remove_user?_method=DELETE" method="POST" onsubmit="return validateEmail(this.remove_email_input.value.trim())">
+						<label for="remove_email_input"></label>
+						<input type="text" name='email' id="remove_email_input" class="email-input-area form-control" placeholder="Email Address"/>
+
+                        <label for="remove_country"></label>
+						<select class="form-control" name="country" id="remove_country">
 							<option value="all">All Countries</option>
 							<option value="AF">Afghanistan</option>
 							<option value="AX">Aland Islands</option>
@@ -538,7 +545,7 @@
 							<option value="ZM">Zambia</option>
 							<option value="ZW">Zimbabwe</option>
 						</select>
-						<input type="submit" value="Unsubscribe"/>				
+						<input class="btn btn-primary form-control mt-2" type="submit" value="Unsubscribe"/>
 					</form>
 				</div>
 			</div>
@@ -551,7 +558,7 @@
 				<p><a href="https://github.com/mbonessi77/WCACompAnnouncement">GitHub</a></p>
 			</footer>
 		</div>
-		
+
 		<script>
 			var regex = /^.+@.+\..+$/;
 
