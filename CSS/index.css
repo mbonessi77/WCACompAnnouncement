@@ -32,7 +32,8 @@
 
 .right-column {
     width: 67%;
-    padding: 10px
+    padding: 10px;
+    margin-bottom: 5rem;
 }
 
 .contact-container {
@@ -49,7 +50,7 @@
     font-family: inherit;
 }
 
-.main-footer footer{
+.main-footer footer {
     background: #000000;
     padding: 15px;
     position: fixed;
@@ -68,12 +69,13 @@
     color: white;
 }
 
-select {
+input, select {
     height: 40px;
+    max-width: 80%;
 }
 
-input[type=submit] {
-    background:#0084ff;
+button, input[type=submit] {
+    background: #0084ff;
     text-align: center;
     font-family: 'Roboto';
     font-weight: bold;
@@ -87,27 +89,11 @@ input[type=submit] {
     color: white;
 }
 
-input[type=text] {
-    height: 40px;
-    width: 20%;
-}
-
-button {
-    background:#0084ff;
-    text-align: center;
-    font-family: 'Roboto';
-    font-weight: bold;
-    font-size: 1em;
-    border-radius: 6px;
-    border: none;
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    color: white;
-}
-
-body {    
+body {
     margin: 0 !important;
     padding: 0 !important;
+}
+
+.email-link {
+    overflow-wrap: break-word;
 }
