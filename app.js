@@ -16,7 +16,7 @@ const { MongoClient } = require('mongodb')
 const uri = "mongodb+srv://CompUpdator:K9iZkJPiVBuqWXD5@useremails.t5qbm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 
-const compByCountry = new Map()
+var compByCountry = new Map()
 var compList = []
 
 app.use(express.static(__dirname))
@@ -31,7 +31,8 @@ var server = app.listen(8080, function () {
     console.log("Listening on port %s", host, port)
  })
 
-schedule.scheduleJob('59 23 * * *', () => { //Schedule for 11 PM UTC
+schedule.scheduleJob('59 23 * * *', () => {
+    compByCountry = new Map()
     var currentDate = new Date()
     var dateString = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + (currentDate.getDate())
     fetchCompList(dateString)
@@ -86,20 +87,25 @@ function sortListIntoMap(list) {
 }
 
 function notifyNewComps() {
-    var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        secure: true,
-        pool: true,
-        tls:{ rejectUnauthorized: false},
-        auth: {
-            user: "cubecompupdates@cubecompupdates.net",
-            pass: "chbkjmvwwkszuzsr"
-        }
-    })
-
     client.connect(err => {
         const collection = client.db("UsersDB").collection("EmailCollection")
         // const collection = client.db("UsersDB").collection("QACollection")
+
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            secure: true,
+            tls: { rejectUnauthorized: false },
+            pool: true,
+            maxMessages: 500,
+            maxConnections: 20,
+            auth: {
+                type: "OAuth2",
+                user: "cubecompupdates@cubecompupdates.net",
+                clientId: "401597408299-7hk9gp48aq92i83467vign5javo95ebc.apps.googleusercontent.com",
+                clientSecret: "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",
+                refreshToken: "1//04QBcKPtN72aACgYIARAAGAQSNwF-L9Irq_ivxp3rfty8aYC6H2z42GtSDCG4icGIRUFTqvRn63JYUxWhx9vATaB1FcZFOKESZhU"
+            }
+        })
 
         compByCountry.forEach((value, key) => {
             collection.find({ country: key }).toArray(async function (err, result) {
@@ -130,8 +136,6 @@ function notifyNewComps() {
                         }
                     })
                 }
-
-                compByCountry.set(key, [])
             })
         })
     })
