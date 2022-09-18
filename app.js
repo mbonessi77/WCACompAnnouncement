@@ -1,7 +1,12 @@
-var bodyParser = require('body-parser')
+const config = require('./config')
+const { MongoClient } = require('mongodb')
+const uri = config.mongoDbUri
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 const methodOverride = require('method-override')
 const { promisify } = require('util')
 const sleep = promisify(setTimeout)
+
+var bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
 var https = require('https')
 var schedule = require('node-schedule')
@@ -11,10 +16,6 @@ var express = require('express')
 var app = express()
 app.use(jsonParser)
 app.use(methodOverride('X-HTTP-Method-Override'))
-
-const { MongoClient } = require('mongodb')
-const uri = "mongodb+srv://CompUpdator:K9iZkJPiVBuqWXD5@useremails.t5qbm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 
 var compByCountry = new Map()
 var compList = []
@@ -100,10 +101,10 @@ function notifyNewComps() {
             maxConnections: 20,
             auth: {
                 type: "OAuth2",
-                user: "cubecompupdates@cubecompupdates.net",
-                clientId: "401597408299-7hk9gp48aq92i83467vign5javo95ebc.apps.googleusercontent.com",
-                clientSecret: "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",
-                refreshToken: "1//04QBcKPtN72aACgYIARAAGAQSNwF-L9Irq_ivxp3rfty8aYC6H2z42GtSDCG4icGIRUFTqvRn63JYUxWhx9vATaB1FcZFOKESZhU"
+                user: config.user,
+                clientId: config.clientId,
+                clientSecret: config.clientSecret,
+                refreshToken: config.refreshtoken
             }
         })
 

@@ -7,13 +7,17 @@
     "body-parser": "^1.19.0",
     "csv-string": "^4.0.1",
     "csvtojson": "^2.0.10",
-    "express": "^4.17.1",
+    "express": "^4.18.1",
+    "googleapis": "^107.0.0",
     "method-override": "^3.0.0",
     "mongodb": "^4.0.0",
     "mongoose": "^6.1.1",
+    "node-oauth2-client": "0.0.0-rc1",
+    "node-oauth2-server": "^2.4.0",
     "node-schedule": "^2.0.0",
-    "nodemailer": "^6.6.3",
-    "objects-to-csv": "^1.3.6"
+    "nodemailer": "^6.7.8",
+    "objects-to-csv": "^1.3.6",
+    "pg": "^8.8.0"
   },
   "scripts": {
     "start": "node app.js",
@@ -21,6 +25,6 @@
   },
   "version": "4.17.1",
   "devDependencies": {
-    "mocha": "^9.1.3"
+    "mocha": "^10.0.0"
   }
 }
