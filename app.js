@@ -3,8 +3,6 @@ const { MongoClient } = require('mongodb')
 const uri = config.mongoDbUri
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 const methodOverride = require('method-override')
-const { promisify } = require('util')
-const sleep = promisify(setTimeout)
 
 var bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
@@ -93,12 +91,11 @@ function notifyNewComps() {
         // const collection = client.db("UsersDB").collection("QACollection")
 
         var transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
             secure: true,
             tls: { rejectUnauthorized: false },
             pool: true,
-            maxMessages: 500,
-            maxConnections: 20,
             auth: {
                 type: "OAuth2",
                 user: config.user,
@@ -121,7 +118,6 @@ function notifyNewComps() {
                 }
 
                 for (var i = 0; i < result.length; i++) {
-                    sleep(1000)
                     var mailOptions = {
                         from: 'Comp Announcer',
                         to: result[i].email,
@@ -129,7 +125,7 @@ function notifyNewComps() {
                         text: emailText
                     }
 
-                    transporter.sendMail(mailOptions, function (err, info) {
+                    await transporter.sendMail(mailOptions, async function (err, info) {
                         if (err) {
                             console.log(err)
                         } else {
