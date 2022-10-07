@@ -17,6 +17,20 @@ app.use(methodOverride('X-HTTP-Method-Override'))
 
 var compByCountry = new Map()
 var compList = []
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    tls: { rejectUnauthorized: false },
+    pool: true,
+    auth: {
+        type: "OAuth2",
+        user: config.user,
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        refreshToken: config.refreshtoken
+    }
+})
 
 app.use(express.static(__dirname))
 
@@ -90,21 +104,6 @@ function notifyNewComps() {
         const collection = client.db("UsersDB").collection("EmailCollection")
         // const collection = client.db("UsersDB").collection("QACollection")
 
-        var transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            tls: { rejectUnauthorized: false },
-            pool: true,
-            auth: {
-                type: "OAuth2",
-                user: config.user,
-                clientId: config.clientId,
-                clientSecret: config.clientSecret,
-                refreshToken: config.refreshtoken
-            }
-        })
-
         compByCountry.forEach((value, key) => {
             collection.find({ country: key }).toArray(async function (err, result) {
                 if (err) {
@@ -117,15 +116,25 @@ function notifyNewComps() {
                     emailText += value[k].name + ": " + value[k].url + "\n\n"
                 }
 
-                for (var i = 0; i < result.length; i++) {
+                var emails = ""
+
+                for (var k = 0; k < result.length; k++) {
+                    if (k == 0) {
+                        emails += result[k].email
+                    } else {
+                        emails += ", " + result[k].email
+                    }
+                }
+
+                if (emails != "") {
                     var mailOptions = {
                         from: 'Comp Announcer',
-                        to: result[i].email,
+                        to: emails,
                         subject: "New Competition In Your Country!",
                         text: emailText
                     }
-
-                    await transporter.sendMail(mailOptions, async function (err, info) {
+    
+                    transporter.sendMail(mailOptions, function (err, info) {
                         if (err) {
                             console.log(err)
                         } else {
