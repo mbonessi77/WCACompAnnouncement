@@ -129,7 +129,8 @@ function notifyNewComps() {
                 if (emails != "") {
                     var mailOptions = {
                         from: 'Comp Announcer',
-                        to: emails,
+                        to: [],
+                        bcc: emails,
                         subject: "New Competition In Your Country!",
                         text: emailText
                     }
