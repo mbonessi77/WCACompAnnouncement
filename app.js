@@ -46,6 +46,7 @@ var server = app.listen(8080, function () {
 
 schedule.scheduleJob('59 23 * * *', () => {
     compByCountry = new Map()
+    compList = []
     var currentDate = new Date()
     var dateString = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + (currentDate.getDate())
     fetchCompList(dateString)
@@ -80,21 +81,27 @@ function fetchCompList(date) {
 
 function sortListIntoMap(list) {
     list.forEach(element => {
-        if (compByCountry.has(element.country_iso2)) {
-            var shouldNotAdd = false
-            compByCountry.get(element.country_iso2).filter((comp, index, self) => {
-                index === self.findIndex((e) => {
-                    shouldNotAdd = e.id === element.id
-                    return shouldNotAdd
-                })
-            })
-            if(!shouldNotAdd) {
-                compByCountry.get(element.country_iso2).push(element)
+        try {
+            if (typeof compByCountry !== 'undefined') {
+                if (compByCountry.has(element.country_iso2)) {
+                    var shouldNotAdd = false
+                    compByCountry.get(element.country_iso2).filter((comp, index, self) => {
+                        index === self.findIndex((e) => {
+                            shouldNotAdd = e.id === element.id
+                            return shouldNotAdd
+                        })
+                    })
+                    if(!shouldNotAdd) {
+                        compByCountry.get(element.country_iso2).push(element)
+                    }
+                    
+                } else {
+                    compByCountry.set(element.country_iso2, [])
+                    compByCountry.get(element.country_iso2).push(element)
+                }
             }
-            
-        } else {
-            compByCountry.set(element.country_iso2, [])
-            compByCountry.get(element.country_iso2).push(element)
+        } catch(exception) {
+            console.log(exception + " at country " + element.country_iso2)
         }
     })
 }
