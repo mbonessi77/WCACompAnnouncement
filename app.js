@@ -139,7 +139,9 @@ function notifyNewComps() {
                         to: [],
                         bcc: emails,
                         subject: "New Competition In Your Country!",
-                        text: emailText
+                        text: emailText,
+                        pool: true,
+                        maxMessages: Infinity
                     }
     
                     transporter.sendMail(mailOptions, function (err, info) {
