@@ -15,7 +15,6 @@ var app = express()
 app.use(jsonParser)
 app.use(methodOverride('X-HTTP-Method-Override'))
 
-var emailsSent = 0
 var compByCountry = new Map()
 var compList = []
 const transporter = nodemailer.createTransport({
@@ -125,7 +124,6 @@ function notifyNewComps() {
                 }
 
                 var emails = ""
-                var numRecipients = 0
 
                 for (var k = 0; k < result.length; k++) {
                     if (k == 0) {
@@ -133,7 +131,6 @@ function notifyNewComps() {
                     } else {
                         emails += ", " + result[k].email
                     }
-                    numRecipients++
                 }
 
                 if (emails != "") {
@@ -150,10 +147,6 @@ function notifyNewComps() {
                     transporter.sendMail(mailOptions, function (err, info) {
                         if (err) {
                             console.log(err)
-                            console.log("Error sending email for " + country + ". Total recipients: " + numRecipients + ". Total emails sent: " + emailsSent)
-                        } else {
-                            console.log("Email Sent: " + info.response)
-                            emailsSent++
                         }
                     })
                 }
